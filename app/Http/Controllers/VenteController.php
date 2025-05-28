@@ -31,7 +31,8 @@ class VenteController extends Controller
     {
         $produits = Produit::where('quantite_stock', '>', 0)->get();
         $clients = Client::all();
-        return view('ventes.create', compact('produits', 'clients'));
+        $pharmaciens = Pharmacien::with('user')->get();
+        return view('ventes.create', compact('produits', 'clients', 'pharmaciens'));
     }
 
     /**
@@ -106,7 +107,8 @@ class VenteController extends Controller
     {
         $produits = Produit::all();
         $clients = Client::all();
-        return view('ventes.edit', compact('vente', 'produits', 'clients'));
+        $pharmaciens = Pharmacien::with('user')->get();
+        return view('ventes.edit', compact('vente', 'produits', 'clients', 'pharmaciens'));
     }
 
     /**

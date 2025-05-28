@@ -63,7 +63,7 @@
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($stats['revenu_total'], 2) }} FCFA</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-euro-sign fa-2x text-gray-300"></i>
+                            <h1 class="font-weight-bold">XOF</h1>
                         </div>
                     </div>
                 </div>
