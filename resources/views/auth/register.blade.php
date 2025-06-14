@@ -121,39 +121,26 @@
                                     </div>
                                 </div>
 
-                                <!-- Informations spécifiques au rôle -->
+                                <!-- Rôle caché défini automatiquement comme pharmacien -->
+                                <input type="hidden" name="role" value="pharmacien">
+
+                                <!-- Champs spécifiques aux pharmaciens -->
                                 <div class="col-md-6">
-                                    <!-- Rôle -->
+                                    <!-- Spécialité -->
                                     <div class="mb-3">
-                                        <label for="role" class="form-label">Type de compte</label>
+                                        <label for="specialite" class="form-label">Spécialité</label>
                                         <div class="input-group">
-                                            <span class="input-group-text"><i class="fas fa-user-tag"></i></span>
-                                            <select id="role" class="form-select" name="role" required>
-                                                <option value="" disabled selected>Sélectionnez un type de compte</option>
-                                                <option value="client" {{ old('role') == 'client' ? 'selected' : '' }}>Client</option>
-                                                <option value="pharmacien" {{ old('role') == 'pharmacien' ? 'selected' : '' }}>Pharmacien</option>
-                                            </select>
+                                            <span class="input-group-text"><i class="fas fa-stethoscope"></i></span>
+                                            <input id="specialite" class="form-control" type="text" name="specialite" value="{{ old('specialite') }}">
                                         </div>
                                     </div>
 
-                                    <!-- Champs spécifiques aux pharmaciens (affichés conditionnellement) -->
-                                    <div id="pharmacien-fields" style="display: none;">
-                                        <!-- Spécialité -->
-                                        <div class="mb-3">
-                                            <label for="specialite" class="form-label">Spécialité</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text"><i class="fas fa-stethoscope"></i></span>
-                                                <input id="specialite" class="form-control" type="text" name="specialite" value="{{ old('specialite') }}">
-                                            </div>
-                                        </div>
-
-                                        <!-- Téléphone -->
-                                        <div class="mb-3">
-                                            <label for="telephone" class="form-label">Téléphone</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                                                <input id="telephone" class="form-control" type="text" name="telephone" value="{{ old('telephone') }}">
-                                            </div>
+                                    <!-- Téléphone -->
+                                    <div class="mb-3">
+                                        <label for="telephone" class="form-label">Téléphone</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                            <input id="telephone" class="form-control" type="text" name="telephone" value="{{ old('telephone') }}">
                                         </div>
                                     </div>
                                 </div>
@@ -176,26 +163,10 @@
     <!-- Bootstrap JS Bundle avec Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Script pour afficher/masquer les champs spécifiques aux pharmaciens -->
+    <!-- Script pour le formulaire -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const roleSelect = document.getElementById('role');
-            const pharmacienFields = document.getElementById('pharmacien-fields');
-            
-            // Fonction pour afficher/masquer les champs en fonction du rôle sélectionné
-            function togglePharmacienFields() {
-                if (roleSelect.value === 'pharmacien') {
-                    pharmacienFields.style.display = 'block';
-                } else {
-                    pharmacienFields.style.display = 'none';
-                }
-            }
-            
-            // Exécuter au chargement de la page
-            togglePharmacienFields();
-            
-            // Exécuter à chaque changement de sélection
-            roleSelect.addEventListener('change', togglePharmacienFields);
+            // Code JavaScript supplémentaire peut être ajouté ici si nécessaire
         });
     </script>
 </body>
