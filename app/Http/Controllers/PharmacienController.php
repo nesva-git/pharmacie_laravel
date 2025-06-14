@@ -133,6 +133,26 @@ class PharmacienController extends Controller
     }
 
     /**
+     * Update the specified user's role.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $userId
+     * @return \Illuminate\Http\Response
+     */
+    public function updateRole(Request $request, $userId)
+    {
+        $request->validate([
+            'role' => 'required|in:admin,pharmacien',
+        ]);
+
+        $user = User::findOrFail($userId);
+        $user->role = $request->role;
+        $user->save();
+
+        return back()->with('success', 'Le rôle a été mis à jour avec succès.');
+    }
+
+    /**
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\Pharmacien  $pharmacien

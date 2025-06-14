@@ -49,8 +49,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('clients', ClientController::class);
     Route::resource('ventes', VenteController::class);
     
-    // Routes accessibles uniquement aux administrateurs et pharmaciens
+    // Routes pour les pharmaciens (accessibles aux administrateurs et pharmaciens)
     Route::middleware('role:admin,pharmacien')->group(function () {
         Route::resource('pharmaciens', PharmacienController::class);
+        Route::patch('/pharmaciens/{user}/update-role', [PharmacienController::class, 'updateRole'])
+            ->name('pharmaciens.update-role');
     });
 });
