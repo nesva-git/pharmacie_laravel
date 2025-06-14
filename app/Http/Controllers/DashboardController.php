@@ -56,13 +56,17 @@ class DashboardController extends Controller
 
         // Ventes par mois pour l'année en cours
         $ventesParMois = Vente::select(
-            DB::raw('MONTH(date_vente) as mois'),
+            DB::raw('strftime("%m", date_vente) as mois'),
             DB::raw('SUM(total) as montant')
         )
-            ->whereYear('date_vente', Carbon::now()->year)
+            ->where(DB::raw('strftime("%Y", date_vente)'), '=', Carbon::now()->year)
             ->groupBy('mois')
             ->orderBy('mois')
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                $item->mois = (int) $item->mois; // Convertir le mois en entier pour la cohérence
+                return $item;
+            });
 
         // Préparer les données pour les graphiques
         $chartData = [
