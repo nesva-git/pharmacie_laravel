@@ -43,13 +43,17 @@
                             <td>
                                 <div class="d-flex flex-column gap-1">
                                     <div class="btn-group" role="group">
+                                        @if(auth()->user()->role === 'admin' || ($pharmacien->user->id === auth()->user()->id))
                                         <a href="{{ route('pharmaciens.show', $pharmacien->id) }}" class="btn btn-info btn-sm">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        @if(auth()->user()->role === 'admin')
+                                        @endif
+                                        @if(auth()->user()->role === 'admin' || (auth()->user()->role === 'pharmacien' && $pharmacien->user->id === auth()->user()->id))
                                         <a href="{{ route('pharmaciens.edit', $pharmacien->id) }}" class="btn btn-primary btn-sm">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        @endif
+                                        @if(auth()->user()->role === 'admin')
                                         <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $pharmacien->id }}">
                                             <i class="fas fa-trash"></i>
                                         </button>

@@ -73,8 +73,32 @@ class PharmacienController extends Controller
      */
     public function show(Pharmacien $pharmacien)
     {
-        $pharmacien->load('user');
-        return view('pharmaciens.show', compact('pharmacien'));
+        $pharmacien->load(['user', 'ventes']);
+        
+        // Récupérer les ventes des 6 derniers mois
+        $sixMonthsAgo = now()->subMonths(5)->startOfMonth();
+        
+        // Initialiser un tableau pour stocker les ventes par mois
+        $ventesParMois = collect(range(0, 5))->map(function ($i) use ($pharmacien) {
+            $date = now()->subMonths(5 - $i);
+            $month = $date->month;
+            $year = $date->year;
+            
+            $total = $pharmacien->ventes()
+                ->whereYear('date_vente', $year)
+                ->whereMonth('date_vente', $month)
+                ->sum('total');
+                
+            return [
+                'mois' => $date->translatedFormat('M Y'),
+                'total' => $total
+            ];
+        });
+        
+        return view('pharmaciens.show', [
+            'pharmacien' => $pharmacien,
+            'ventesParMois' => $ventesParMois
+        ]);
     }
 
     /**

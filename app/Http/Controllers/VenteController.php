@@ -18,7 +18,15 @@ class VenteController extends Controller
      */
     public function index()
     {
-        $ventes = Vente::with(['produit', 'client', 'pharmacien'])->latest('date_vente')->get();
+        $query = Vente::with(['produit', 'client', 'pharmacien']);
+        
+        // Si l'utilisateur est un pharmacien, ne récupérer que ses ventes
+        if (auth()->user()->role === 'pharmacien') {
+            $query->where('pharmacien_id', auth()->user()->pharmacien->id);
+        }
+        
+        $ventes = $query->latest('date_vente')->get();
+        
         return view('ventes.index', compact('ventes'));
     }
 
@@ -94,6 +102,12 @@ class VenteController extends Controller
     public function show(Vente $vente)
     {
         $vente->load(['produit', 'client', 'pharmacien.user']);
+        
+        // Vérifier si l'utilisateur est autorisé à voir cette vente
+        if (auth()->user()->role === 'pharmacien' && $vente->pharmacien_id !== auth()->user()->pharmacien->id) {
+            abort(403, 'Accès non autorisé à cette vente.');
+        }
+        
         return view('ventes.show', compact('vente'));
     }
 
@@ -120,48 +134,68 @@ class VenteController extends Controller
      */
     public function update(Request $request, Vente $vente)
     {
+        // Vérifier si l'utilisateur est autorisé à modifier cette vente
+        if (auth()->user()->role === 'pharmacien' && $vente->pharmacien_id !== auth()->user()->pharmacien->id) {
+            abort(403, 'Accès non autorisé à cette vente.');
+        }
+        
+        // Validation des données
         $validated = $request->validate([
             'produit_id' => 'required|exists:produits,id',
             'client_id' => 'required|exists:clients,id',
             'quantite' => 'required|integer|min:1',
             'date_vente' => 'required|date',
+            'pharmacien_id' => 'nullable|exists:pharmaciens,id',
         ]);
         
-        // Si le produit ou la quantité a changé, mettre à jour le stock
-        if ($vente->produit_id != $request->produit_id || $vente->quantite != $request->quantite) {
-            // Remettre l'ancienne quantité en stock
-            $ancienProduit = Produit::findOrFail($vente->produit_id);
-            $ancienProduit->quantite_stock += $vente->quantite;
-            $ancienProduit->save();
-            
-            // Vérifier la disponibilité du nouveau produit
-            $nouveauProduit = Produit::findOrFail($request->produit_id);
-            if ($nouveauProduit->quantite_stock < $request->quantite) {
-                return back()->withErrors(['quantite' => 'La quantité demandée n\'est pas disponible en stock.'])->withInput();
-            }
-            
-            // Mettre à jour le stock du nouveau produit
-            $nouveauProduit->quantite_stock -= $request->quantite;
-            $nouveauProduit->save();
-            
-            // Calculer le nouveau total
-            $total = $nouveauProduit->prix * $request->quantite;
-        } else {
-            // Si seule la date a changé, garder le même total
-            $total = $vente->total;
+        // Vérifier si l'utilisateur peut modifier le pharmacien
+        if (auth()->user()->role === 'pharmacien' && $request->has('pharmacien_id') && $request->pharmacien_id != $vente->pharmacien_id) {
+            return back()->withErrors(['pharmacien_id' => 'Vous n\'êtes pas autorisé à modifier le pharmacien.'])->withInput();
         }
         
-        // Mettre à jour la vente
-        $vente->update([
-            'produit_id' => $request->produit_id,
-            'client_id' => $request->client_id,
-            'quantite' => $request->quantite,
-            'total' => $total,
-            'date_vente' => $request->date_vente,
-        ]);
+        // Récupérer le produit
+        $produit = Produit::findOrFail($validated['produit_id']);
         
-        return redirect()->route('ventes.index')
-            ->with('success', 'Vente mise à jour avec succès.');
+        // Calculer la différence de quantité pour la mise à jour du stock
+        $differenceQuantite = $validated['quantite'] - $vente->quantite;
+        
+        // Vérifier si la nouvelle quantité est disponible en stock
+        if ($produit->quantite_stock < $differenceQuantite) {
+            return back()->withErrors(['quantite' => 'Stock insuffisant pour cette modification.'])->withInput();
+        }
+        
+        // Démarrer une transaction pour assurer l'intégrité des données
+        \DB::beginTransaction();
+        
+        try {
+            // Mettre à jour la vente
+            $vente->update([
+                'produit_id' => $validated['produit_id'],
+                'client_id' => $validated['client_id'],
+                'quantite' => $validated['quantite'],
+                'total' => $produit->prix * $validated['quantite'],
+                'date_vente' => $validated['date_vente'],
+                'pharmacien_id' => auth()->user()->role === 'admin' && isset($validated['pharmacien_id']) 
+                    ? $validated['pharmacien_id'] 
+                    : $vente->pharmacien_id,
+            ]);
+            
+            // Mettre à jour le stock du produit
+            $produit->quantite_stock -= $differenceQuantite;
+            $produit->save();
+            
+            // Valider la transaction
+            \DB::commit();
+            
+            return redirect()->route('ventes.index')
+                ->with('success', 'Vente mise à jour avec succès.');
+                
+        } catch (\Exception $e) {
+            // En cas d'erreur, annuler la transaction
+            \DB::rollBack();
+            
+            return back()->withErrors(['error' => 'Une erreur est survenue lors de la mise à jour de la vente.'])->withInput();
+        }
     }
 
     /**

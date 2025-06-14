@@ -7,9 +7,11 @@
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold text-primary">Liste des Ventes</h6>
+            @if(auth()->user()->role === 'admin' || auth()->user()->role === 'pharmacien')
             <a href="{{ route('ventes.create') }}" class="btn btn-primary btn-sm">
                 <i class="fas fa-plus me-1"></i> Nouvelle vente
             </a>
+            @endif
         </div>
         <div class="card-body">
             @if(count($ventes) > 0)
@@ -48,12 +50,14 @@
                                     <a href="{{ route('ventes.show', $vente->id) }}" class="btn btn-info btn-sm">
                                         <i class="fas fa-eye"></i>
                                     </a>
+                                    @if(auth()->user()->role === 'admin' || (auth()->user()->role === 'pharmacien' && $vente->pharmacien_id === auth()->user()->pharmacien->id))
                                     <a href="{{ route('ventes.edit', $vente->id) }}" class="btn btn-primary btn-sm">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $vente->id }}">
                                         <i class="fas fa-trash"></i>
                                     </button>
+                                    @endif
                                 </div>
 
                                 <!-- Modal de suppression -->
