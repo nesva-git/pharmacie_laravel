@@ -12,6 +12,14 @@
             </a>
         </div>
         <div class="card-body">
+            <!-- Barre de recherche -->
+            <div class="mb-4">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Rechercher un produit par nom, description ou prix...">
+                </div>
+            </div>
+            
             @if(count($produits) > 0)
             <div class="table-responsive">
                 <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
@@ -109,6 +117,48 @@
 
 @section('scripts')
 <script>
+    // Fonction de recherche en temps réel
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const tableBody = document.querySelector('#dataTable tbody');
+        const rows = document.querySelectorAll('#dataTable tbody tr');
+        
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            rows.forEach(row => {
+                const cells = row.getElementsByTagName('td');
+                let shouldShow = false;
+                
+                // Vérifier chaque cellule de la ligne (sauf la dernière colonne d'actions)
+                for (let i = 0; i < cells.length - 1; i++) {
+                    const cellText = cells[i].textContent.toLowerCase();
+                    if (cellText.includes(searchTerm)) {
+                        shouldShow = true;
+                        break;
+                    }
+                }
+                
+                // Afficher ou masquer la ligne selon la recherche
+                row.style.display = shouldShow ? '' : 'none';
+            });
+            
+            // Mettre à jour le message si aucun résultat
+            const visibleRows = document.querySelectorAll('#dataTable tbody tr[style!="display: none;"]');
+            const noResults = document.getElementById('noResults');
+            
+            if (visibleRows.length === 0 && searchTerm !== '') {
+                if (!noResults) {
+                    const newRow = document.createElement('tr');
+                    newRow.id = 'noResults';
+                    newRow.innerHTML = `<td colspan="7" class="text-center py-4">Aucun produit ne correspond à votre recherche.</td>`;
+                    tableBody.appendChild(newRow);
+                }
+            } else if (noResults) {
+                noResults.remove();
+            }
+        });
+    });
     $(document).ready(function() {
         $('#dataTable').DataTable({
             language: {
